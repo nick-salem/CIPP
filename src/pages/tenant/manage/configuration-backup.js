@@ -65,7 +65,7 @@ const Page = () => {
   });
 
   // Use the actual backup files as the backup data
-  const filteredBackupData = backupList.data || [];
+  const filteredBackupData = Array.isArray(backupList.data) ? backupList.data : [];
   // Generate backup tags from actual API response items - use raw items directly
   const generateBackupTags = (backup) => {
     // Use the Items array directly from the API response without any translation
@@ -88,9 +88,9 @@ const Page = () => {
   }));
 
   // Process existing backup configuration, find tenantFilter. by comparing settings.currentTenant with Tenant.value
-  const currentConfig = existingBackupConfig.data?.find(
-    (tenant) => tenant.Tenant.value === settings.currentTenant
-  );
+  const currentConfig = Array.isArray(existingBackupConfig.data)
+    ? existingBackupConfig.data.find((tenant) => tenant.Tenant.value === settings.currentTenant)
+    : null;
   const hasExistingConfig = currentConfig && currentConfig.Parameters?.ScheduledBackupValues;
 
   // Create property items for current configuration
@@ -143,6 +143,7 @@ const Page = () => {
     if (values.antiphishing) enabledComponents.push("Anti-Phishing");
     if (values.CippWebhookAlerts) enabledComponents.push("CIPP Webhook Alerts");
     if (values.CippScriptedAlerts) enabledComponents.push("CIPP Scripted Alerts");
+    if (values.CippCustomVariables) enabledComponents.push("Custom Variables");
 
     return enabledComponents;
   };
@@ -181,7 +182,6 @@ const Page = () => {
     <HeaderedTabbedLayout
       tabOptions={tabOptions}
       title={title}
-      backUrl="/tenant/standards/list-standards"
       actions={[]}
       actionsData={{}}
       isFetching={backupList.isFetching || existingBackupConfig.isFetching}
@@ -203,7 +203,16 @@ const Page = () => {
                       Current Configuration
                     </Typography>
                     {!hasExistingConfig ? (
-                      <CippBackupScheduleDrawer buttonText="Add Backup Schedule" />
+                      <CippBackupScheduleDrawer
+                        buttonText="Add Backup Schedule"
+                        onSuccess={() => {
+                          // Refresh both queries when a backup schedule is added
+                          setTimeout(() => {
+                            backupList.refetch();
+                            existingBackupConfig.refetch();
+                          }, 2000);
+                        }}
+                      />
                     ) : (
                       <Button
                         onClick={removeDialog.handleOpen}
@@ -371,7 +380,14 @@ const Page = () => {
           confirmText:
             "Are you sure you want to remove this backup schedule? This will stop automatic backups but won't delete existing backup files.",
         }}
-        relatedQueryKeys={["BackupTasks"]}
+        relatedQueryKeys={[`BackupTasks-${settings.currentTenant}`, `BackupList-${settings.currentTenant}`]}
+        onSuccess={() => {
+          // Refresh both queries when a backup schedule is removed
+          setTimeout(() => {
+            backupList.refetch();
+            existingBackupConfig.refetch();
+          }, 2000);
+        }}
       />
     </HeaderedTabbedLayout>
   );

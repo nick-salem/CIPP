@@ -14,6 +14,10 @@ import {
   Paper,
   Checkbox,
   SvgIcon,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -158,6 +162,7 @@ export const CIPPTableToptoolbar = ({
   setGraphFilterData,
   setConfiguredSimpleColumns,
   queueMetadata,
+  isInDialog = false,
 }) => {
   const popover = usePopover();
   const [filtersAnchor, setFiltersAnchor] = useState(null);
@@ -172,6 +177,7 @@ export const CIPPTableToptoolbar = ({
   const createDialog = useDialog();
   const [actionData, setActionData] = useState({ data: {}, action: {}, ready: false });
   const [offcanvasVisible, setOffcanvasVisible] = useState(false);
+  const [jsonDialogOpen, setJsonDialogOpen] = useState(false); // For dialog-based JSON view
   const [filterList, setFilterList] = useState(filters);
   const [currentEffectiveQueryKey, setCurrentEffectiveQueryKey] = useState(queryKey || title);
   const [originalSimpleColumns, setOriginalSimpleColumns] = useState(simpleColumns);
@@ -278,10 +284,15 @@ export const CIPPTableToptoolbar = ({
         setActiveFilterName(last.name);
 
         if (last.value?.$select) {
-          const selectColumns = last.value.$select
-            .split(",")
-            .map((col) => col.trim())
-            .filter((col) => usedColumns.includes(col));
+          let selectColumns = [];
+          if (Array.isArray(last.value.$select)) {
+            selectColumns = last.value.$select;
+          } else if (typeof last.value.$select === "string") {
+            selectColumns = last.value.$select
+              .split(",")
+              .map((col) => col.trim())
+              .filter((col) => usedColumns.includes(col));
+          }
           if (selectColumns.length > 0) {
             setConfiguredSimpleColumns(selectColumns);
           }
@@ -500,8 +511,8 @@ export const CIPPTableToptoolbar = ({
         let selectedColumns = [];
         if (Array.isArray(filter?.$select)) {
           selectedColumns = filter?.$select;
-        } else {
-          selectedColumns = filter?.$select.split(",");
+        } else if (typeof filter?.$select === "string") {
+          selectedColumns = filter.$select.split(",");
         }
         if (selectedColumns.length > 0) {
           setConfiguredSimpleColumns(selectedColumns);
@@ -978,7 +989,11 @@ export const CIPPTableToptoolbar = ({
               </MenuItem>
               <MenuItem
                 onClick={() => {
-                  setOffcanvasVisible(true);
+                  if (isInDialog) {
+                    setJsonDialogOpen(true);
+                  } else {
+                    setOffcanvasVisible(true);
+                  }
                   setExportAnchor(null);
                 }}
               >
@@ -1147,25 +1162,27 @@ export const CIPPTableToptoolbar = ({
           ))}
       </Menu>
 
-      {/* API Response Off-Canvas */}
-      <CippOffCanvas
-        size="xl"
-        title="API Response"
-        visible={offcanvasVisible}
-        onClose={() => {
-          setOffcanvasVisible(false);
-        }}
-      >
-        <Stack spacing={2}>
-          <Typography variant="h4">API Response</Typography>
-          <CippCodeBlock
-            type="editor"
-            code={JSON.stringify(usedData, null, 2)}
-            editorHeight="1000px"
-            showLineNumbers={!mdDown}
-          />
-        </Stack>
-      </CippOffCanvas>
+      {/* API Response Off-Canvas - only show when not in dialog mode */}
+      {!isInDialog && (
+        <CippOffCanvas
+          size="xl"
+          title="API Response"
+          visible={offcanvasVisible}
+          onClose={() => {
+            setOffcanvasVisible(false);
+          }}
+        >
+          <Stack spacing={2}>
+            <Typography variant="h4">API Response</Typography>
+            <CippCodeBlock
+              type="editor"
+              code={JSON.stringify(usedData, null, 2)}
+              editorHeight="1000px"
+              showLineNumbers={!mdDown}
+            />
+          </Stack>
+        </CippOffCanvas>
+      )}
 
       {/* Action Dialog */}
       {actionData.ready && (
@@ -1195,8 +1212,8 @@ export const CIPPTableToptoolbar = ({
               let selectedColumns = [];
               if (Array.isArray(filter?.$select)) {
                 selectedColumns = filter?.$select;
-              } else {
-                selectedColumns = filter?.$select.split(",");
+              } else if (typeof filter?.$select === "string") {
+                selectedColumns = filter.$select.split(",");
               }
               if (selectedColumns.length > 0) {
                 setConfiguredSimpleColumns(selectedColumns);
@@ -1212,6 +1229,30 @@ export const CIPPTableToptoolbar = ({
           component="card"
         />
       </CippOffCanvas>
+
+      {/* JSON Dialog for when in dialog mode */}
+      {isInDialog && (
+        <Dialog
+          fullWidth
+          maxWidth="xl"
+          open={jsonDialogOpen}
+          onClose={() => setJsonDialogOpen(false)}
+          sx={{ zIndex: (theme) => theme.zIndex.modal + 1 }}
+        >
+          <DialogTitle>API Response</DialogTitle>
+          <DialogContent>
+            <CippCodeBlock
+              type="editor"
+              code={JSON.stringify(usedData, null, 2)}
+              editorHeight="600px"
+              showLineNumbers={!mdDown}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setJsonDialogOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+      )}
     </>
   );
 };

@@ -45,7 +45,7 @@ const Page = () => {
   // API call for updating offboarding defaults
   const updateOffboardingDefaults = ApiPostCall({
     urlFromData: true,
-    relatedQueryKeys: [`TenantProperties_${currentTenant}`],
+    relatedQueryKeys: [`TenantProperties_${currentTenant}`, "CustomVariables*"],
   });
 
   const { isValid: isFormValid } = useFormState({ control: formControl.control });
@@ -145,7 +145,6 @@ const Page = () => {
       <HeaderedTabbedLayout
         tabOptions={tabOptions}
         title={title}
-        backUrl="/tenant/standards/list-standards"
         actions={[]}
         actionsData={{}}
         isFetching={false}
@@ -214,7 +213,7 @@ const Page = () => {
                         groupId: group.value,
                         groupName: group.label,
                       })),
-                      customerId: currentTenant,
+                      customerId: tenantDetails.data?.id,
                     };
                     updateTenant.mutate({
                       url: "/api/EditTenant",
