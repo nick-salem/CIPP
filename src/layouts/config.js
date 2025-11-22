@@ -446,6 +446,16 @@ export const nativeMenuItems = [
             permissions: ["Endpoint.MEM.*"],
           },
           {
+            title: "Assignment Filters",
+            path: "/endpoint/MEM/assignment-filters",
+            permissions: ["Endpoint.MEM.*"],
+          },
+          {
+            title: "Assignment Filter Templates",
+            path: "/endpoint/MEM/assignment-filter-templates",
+            permissions: ["Endpoint.MEM.*"],
+          },
+          {
             title: "Scripts",
             path: "/endpoint/MEM/list-scripts",
             permissions: ["Endpoint.MEM.*"],
@@ -584,6 +594,11 @@ export const nativeMenuItems = [
             permissions: ["Exchange.SpamFilter.*"],
           },
           {
+            title: "Restricted Users",
+            path: "/email/administration/restricted-users",
+            permissions: ["Exchange.Mailbox.*"],
+          },
+          {
             title: "Tenant Allow/Block Lists",
             path: "/email/administration/tenant-allow-block-lists",
             permissions: ["Exchange.SpamFilter.*"],
@@ -710,11 +725,6 @@ export const nativeMenuItems = [
             title: "Malware Filters",
             path: "/email/reports/malware-filters",
             permissions: ["Exchange.SpamFilter.*"],
-          },
-          {
-            title: "Safe Links Filters",
-            path: "/email/reports/safelinks-filters",
-            permissions: ["Exchange.SafeLinks.*"],
           },
           {
             title: "Safe Attachments Filters",

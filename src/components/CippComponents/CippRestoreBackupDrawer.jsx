@@ -35,6 +35,7 @@ export const CippRestoreBackupDrawer = ({
       antiphishing: true,
       CippWebhookAlerts: true,
       CippScriptedAlerts: true,
+      CippCustomVariables: true,
       CippStandards: true,
       overwrite: false,
       webhook: false,
@@ -46,7 +47,7 @@ export const CippRestoreBackupDrawer = ({
 
   const restoreBackup = ApiPostCall({
     urlFromData: true,
-    relatedQueryKeys: ["BackupList", "BackupTasks"],
+    relatedQueryKeys: [`BackupTasks-${tenantFilter}`],
   });
 
   const { isValid, isDirty } = useFormState({ control: formControl.control });
@@ -65,6 +66,7 @@ export const CippRestoreBackupDrawer = ({
         antiphishing: true,
         CippWebhookAlerts: true,
         CippScriptedAlerts: true,
+        CippCustomVariables: true,
         CippStandards: true,
         overwrite: false,
         webhook: false,
@@ -103,6 +105,7 @@ export const CippRestoreBackupDrawer = ({
           antiphishing: values.antiphishing,
           CippWebhookAlerts: values.CippWebhookAlerts,
           CippScriptedAlerts: values.CippScriptedAlerts,
+          CippCustomVariables: values.CippCustomVariables,
           overwrite: values.overwrite,
         },
       },
@@ -135,6 +138,7 @@ export const CippRestoreBackupDrawer = ({
       antiphishing: true,
       CippWebhookAlerts: true,
       CippScriptedAlerts: true,
+      CippCustomVariables: true,
       CippStandards: true,
       overwrite: false,
       webhook: false,
@@ -195,7 +199,7 @@ export const CippRestoreBackupDrawer = ({
                 multiple={false}
                 api={{
                   url: "/api/ExecListBackup",
-                  queryKey: `BackupList-${tenantFilter}`,
+                  queryKey: `BackupList-${tenantFilter}-autocomplete`,
                   labelField: (option) => {
                     const match = option.BackupName.match(/.*_(\d{4}-\d{2}-\d{2})-(\d{2})(\d{2})/);
                     return match ? `${match[1]} @ ${match[2]}:${match[3]}` : option.BackupName;
@@ -301,6 +305,12 @@ export const CippRestoreBackupDrawer = ({
                 type="switch"
                 label="Scripted Alerts Configuration"
                 name="CippScriptedAlerts"
+                formControl={formControl}
+              />
+              <CippFormComponent
+                type="switch"
+                label="Custom Variables"
+                name="CippCustomVariables"
                 formControl={formControl}
               />
             </Grid>
