@@ -13,6 +13,7 @@ import { ApiPostCall } from "../../api/ApiCall";
 export const CippRestoreBackupDrawer = ({
   buttonText = "Restore Backup",
   backupName = null,
+  backupData = null,
   requiredPermissions = [],
   PermissionButton = Button,
   ...props
@@ -35,6 +36,7 @@ export const CippRestoreBackupDrawer = ({
       antiphishing: true,
       CippWebhookAlerts: true,
       CippScriptedAlerts: true,
+      CippCustomVariables: true,
       CippStandards: true,
       overwrite: false,
       webhook: false,
@@ -46,7 +48,7 @@ export const CippRestoreBackupDrawer = ({
 
   const restoreBackup = ApiPostCall({
     urlFromData: true,
-    relatedQueryKeys: ["BackupList", "BackupTasks"],
+    relatedQueryKeys: [`BackupTasks-${tenantFilter}`],
   });
 
   const { isValid, isDirty } = useFormState({ control: formControl.control });
@@ -65,6 +67,7 @@ export const CippRestoreBackupDrawer = ({
         antiphishing: true,
         CippWebhookAlerts: true,
         CippScriptedAlerts: true,
+        CippCustomVariables: true,
         CippStandards: true,
         overwrite: false,
         webhook: false,
@@ -83,7 +86,12 @@ export const CippRestoreBackupDrawer = ({
     const values = formControl.getValues();
     const startDate = new Date();
     const unixTime = Math.floor(startDate.getTime() / 1000) - 45;
-    const tenantFilterValue = tenantFilter;
+
+    // If in AllTenants context, use the tenant from the backup data
+    let tenantFilterValue = tenantFilter;
+    if (tenantFilter === "AllTenants" && backupData?.tenantSource) {
+      tenantFilterValue = backupData.tenantSource;
+    }
 
     const shippedValues = {
       TenantFilter: tenantFilterValue,
@@ -103,6 +111,7 @@ export const CippRestoreBackupDrawer = ({
           antiphishing: values.antiphishing,
           CippWebhookAlerts: values.CippWebhookAlerts,
           CippScriptedAlerts: values.CippScriptedAlerts,
+          CippCustomVariables: values.CippCustomVariables,
           overwrite: values.overwrite,
         },
       },
@@ -135,6 +144,7 @@ export const CippRestoreBackupDrawer = ({
       antiphishing: true,
       CippWebhookAlerts: true,
       CippScriptedAlerts: true,
+      CippCustomVariables: true,
       CippStandards: true,
       overwrite: false,
       webhook: false,
@@ -195,10 +205,15 @@ export const CippRestoreBackupDrawer = ({
                 multiple={false}
                 api={{
                   url: "/api/ExecListBackup",
-                  queryKey: `BackupList-${tenantFilter}`,
+                  queryKey: `BackupList-${tenantFilter}-autocomplete`,
                   labelField: (option) => {
                     const match = option.BackupName.match(/.*_(\d{4}-\d{2}-\d{2})-(\d{2})(\d{2})/);
-                    return match ? `${match[1]} @ ${match[2]}:${match[3]}` : option.BackupName;
+                    const dateTime = match
+                      ? `${match[1]} @ ${match[2]}:${match[3]}`
+                      : option.BackupName;
+                    const tenantDisplay =
+                      tenantFilter === "AllTenants" ? ` (${option.TenantFilter})` : "";
+                    return `${dateTime}${tenantDisplay}`;
                   },
                   valueField: "BackupName",
                   data: {
@@ -301,6 +316,12 @@ export const CippRestoreBackupDrawer = ({
                 type="switch"
                 label="Scripted Alerts Configuration"
                 name="CippScriptedAlerts"
+                formControl={formControl}
+              />
+              <CippFormComponent
+                type="switch"
+                label="Custom Variables"
+                name="CippCustomVariables"
                 formControl={formControl}
               />
             </Grid>
