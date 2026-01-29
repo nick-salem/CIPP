@@ -15,6 +15,7 @@ export const CippBackupScheduleDrawer = ({
   buttonText = "Add Backup Schedule",
   requiredPermissions = [],
   PermissionButton = Button,
+  onSuccess,
 }) => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const userSettingsDefaults = useSettings();
@@ -33,12 +34,13 @@ export const CippBackupScheduleDrawer = ({
       antiphishing: true,
       CippWebhookAlerts: true,
       CippScriptedAlerts: true,
+      CippCustomVariables: true,
     },
   });
 
   const createBackup = ApiPostCall({
     urlFromData: true,
-    relatedQueryKeys: ["BackupList", "BackupTasks"],
+    relatedQueryKeys: [`BackupTasks-${userSettingsDefaults.currentTenant}`],
   });
 
   const { isValid, isDirty } = useFormState({ control: formControl.control });
@@ -57,9 +59,14 @@ export const CippBackupScheduleDrawer = ({
         antiphishing: true,
         CippWebhookAlerts: true,
         CippScriptedAlerts: true,
+        CippCustomVariables: true,
       });
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
     }
-  }, [createBackup.isSuccess]);
+  }, [createBackup.isSuccess, onSuccess]);
 
   const handleSubmit = () => {
     formControl.trigger();
@@ -104,6 +111,7 @@ export const CippBackupScheduleDrawer = ({
       antiphishing: true,
       CippWebhookAlerts: true,
       CippScriptedAlerts: true,
+      CippCustomVariables: true,
     });
   };
 
@@ -259,6 +267,14 @@ export const CippBackupScheduleDrawer = ({
                 type="switch"
                 label="Scripted Alerts Configuration"
                 name="CippScriptedAlerts"
+                formControl={formControl}
+              />
+            </Grid>
+            <Grid size={{ md: 6, xs: 12 }}>
+              <CippFormComponent
+                type="switch"
+                label="Custom Variables"
+                name="CippCustomVariables"
                 formControl={formControl}
               />
             </Grid>

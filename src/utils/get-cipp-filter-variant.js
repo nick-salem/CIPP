@@ -40,8 +40,6 @@ export const getCippFilterVariant = (providedColumnKeys, arg) => {
   //First key based filters
   switch (tailKey) {
     case "assignedLicenses":
-      console.log("Assigned Licenses Filter", sampleValue, values);
-
       // Extract unique licenses from the data if available
       let filterSelectOptions = [];
       if (isOptions && arg.dataArray && Array.isArray(arg.dataArray)) {
@@ -64,7 +62,7 @@ export const getCippFilterVariant = (providedColumnKeys, arg) => {
             return false;
           }
           const userSkuIds = userLicenses.map((license) => license.skuId).filter(Boolean);
-          return filterValue.every((selectedSkuId) => userSkuIds.includes(selectedSkuId));
+          return filterValue.some((selectedSkuId) => userSkuIds.includes(selectedSkuId));
         },
         filterSelectOptions: filterSelectOptions,
       };
@@ -97,7 +95,7 @@ export const getCippFilterVariant = (providedColumnKeys, arg) => {
   if (typeOf === "boolean") {
     return {
       filterVariant: "select",
-      sortingFn: "alphanumeric",
+      sortingFn: "boolean",
       filterFn: "equals",
     };
   }
