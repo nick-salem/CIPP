@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
+import { CippIcons } from "../../utils/icon-registry";
 import { Button, Box, Typography, Alert, AlertTitle } from "@mui/material";
 import { Grid } from "@mui/system";
 import { useForm, useFormState } from "react-hook-form";
-import { Backup } from "@mui/icons-material";
 import { CippOffCanvas } from "./CippOffCanvas";
 import CippFormComponent from "./CippFormComponent";
 import { CippFormTenantSelector } from "./CippFormTenantSelector";
@@ -15,6 +15,7 @@ export const CippBackupScheduleDrawer = ({
   buttonText = "Add Backup Schedule",
   requiredPermissions = [],
   PermissionButton = Button,
+  onSuccess,
 }) => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const userSettingsDefaults = useSettings();
@@ -31,14 +32,16 @@ export const CippBackupScheduleDrawer = ({
       intuneprotection: true,
       antispam: true,
       antiphishing: true,
+      teamsvoice: true,
       CippWebhookAlerts: true,
       CippScriptedAlerts: true,
+      CippCustomVariables: true,
     },
   });
 
   const createBackup = ApiPostCall({
     urlFromData: true,
-    relatedQueryKeys: ["BackupList", "BackupTasks"],
+    relatedQueryKeys: [`BackupTasks-${userSettingsDefaults.currentTenant}`],
   });
 
   const { isValid, isDirty } = useFormState({ control: formControl.control });
@@ -55,11 +58,17 @@ export const CippBackupScheduleDrawer = ({
         intuneprotection: true,
         antispam: true,
         antiphishing: true,
+        teamsvoice: true,
         CippWebhookAlerts: true,
         CippScriptedAlerts: true,
+        CippCustomVariables: true,
       });
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
+      }
     }
-  }, [createBackup.isSuccess]);
+  }, [createBackup.isSuccess, onSuccess]);
 
   const handleSubmit = () => {
     formControl.trigger();
@@ -102,17 +111,19 @@ export const CippBackupScheduleDrawer = ({
       intuneprotection: true,
       antispam: true,
       antiphishing: true,
+      teamsvoice: true,
       CippWebhookAlerts: true,
       CippScriptedAlerts: true,
+      CippCustomVariables: true,
     });
   };
 
   return (
     <>
       <PermissionButton
-        requiredPermissions={requiredPermissions}
+        {...(PermissionButton !== Button ? { requiredPermissions } : {})}
         onClick={() => setDrawerVisible(true)}
-        startIcon={<Backup />}
+        startIcon={<CippIcons.Backup />}
       >
         {buttonText}
       </PermissionButton>
@@ -244,6 +255,19 @@ export const CippBackupScheduleDrawer = ({
             </Grid>
 
             <Grid size={{ xs: 12 }}>
+              <Typography variant="h6">Teams</Typography>
+            </Grid>
+            <Grid size={{ md: 6, xs: 12 }}>
+              <CippFormComponent
+                type="switch"
+                label="Teams Phone Number Assignments"
+                name="teamsvoice"
+                formControl={formControl}
+              />
+            </Grid>
+            <Grid size={{ md: 6, xs: 12 }}></Grid>
+
+            <Grid size={{ xs: 12 }}>
               <Typography variant="h6">CIPP</Typography>
             </Grid>
             <Grid size={{ md: 6, xs: 12 }}>
@@ -259,6 +283,14 @@ export const CippBackupScheduleDrawer = ({
                 type="switch"
                 label="Scripted Alerts Configuration"
                 name="CippScriptedAlerts"
+                formControl={formControl}
+              />
+            </Grid>
+            <Grid size={{ md: 6, xs: 12 }}>
+              <CippFormComponent
+                type="switch"
+                label="Custom Variables"
+                name="CippCustomVariables"
                 formControl={formControl}
               />
             </Grid>
